@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memo Cards</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="memo-container"></div>
+    <form id="add-memo-form">
+        <label for="memo-content">Memo Content:</label>
+        <textarea id="memo-content" name="memoContent" required></textarea>
+        
+        <label for="memo-date">Memo Date:</label>
+        <input type="date" id="memo-date" name="memoDate" required>
+
+        <label for="memo-image">Attach Photo:</label>
+        <input type="file" id="memo-image" name="memoImage">
+
+        <button type="submit">Add Memo</button>
+    </form>
+
+    <script src="script.js"></script>
+</body>
+</html>
