@@ -1,4 +1,15 @@
-theme: jekyll-theme-minimal
+
+remote_theme: pages-themes/minimal@v0.2.0
+
+plugins:
+- jekyll-remote-theme # add this line to the plugins list if you already have one
+
+# theme: jekyll-theme-minimal
+
+title: [Jin's big site]
+description: [I'm Jin. Welcome to my coding world!]
+
+
 
 exclude:
   - my_flask_app
