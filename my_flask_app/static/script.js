@@ -1,62 +1,48 @@
-async function addMemo() {
-    const text = document.getElementById('memo-text').value;
-    const image = document.getElementById('memo-image').files[0];
-
-    const formData = new FormData();
-    formData.append('text', text);
-    formData.append('image', image);
-
-    const response = await fetch('/add_memo', {
-        method: 'POST',
-        body: formData,
-    });
-
-    const result = await response.json();
-
-    if (result.status === 'success') {
-        displayMemos();
-    }
-}
-
-async function displayMemos() {
+document.addEventListener('DOMContentLoaded', function () {
     const memoContainer = document.getElementById('memo-container');
-    memoContainer.innerHTML = '';
+    const addMemoForm = document.getElementById('add-memo-form');
 
-    const response = await fetch('/get_memos');
-    const result = await response.json();
-    const memos = result.memos;
+    // Function to create a memo card
+    function createMemoCard(content, date, image) {
+        const memoCard = document.createElement('div');
+        memoCard.className = 'memo-card';
 
-    memos.forEach(memo => {
-        const card = document.createElement('div');
-        card.className = 'memo-card';
-        card.draggable = true;
-        card.ondragstart = (event) => {
-            event.dataTransfer.setData('text/plain', JSON.stringify(memo));
-        };
+        const memoContent = document.createElement('p');
+        memoContent.textContent = content;
 
-        const text = document.createElement('p');
-        text.textContent = memo.text;
-        card.appendChild(text);
+        const memoDate = document.createElement('small');
+        memoDate.textContent = `Date: ${date}`;
 
-        if (memo.image) {
-            const image = document.createElement('img');
-            image.src = `static/${memo.image}`;
-            image.alt = 'Memo Image';
-            card.appendChild(image);
+        const memoImage = document.createElement('img');
+        if (image) {
+            memoImage.src = URL.createObjectURL(image);
+            memoImage.alt = 'Memo Image';
         }
 
-        memoContainer.appendChild(card);
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove Memo';
+        removeButton.addEventListener('click', function () {
+            memoContainer.removeChild(memoCard);
+        });
+
+        memoCard.appendChild(memoContent);
+        memoCard.appendChild(memoDate);
+        memoCard.appendChild(memoImage);
+        memoCard.appendChild(removeButton);
+
+        memoContainer.appendChild(memoCard);
+    }
+
+    // Event listener for form submission
+    addMemoForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(addMemoForm);
+        const content = formData.get('memoContent');
+        const date = formData.get('memoDate');
+        const image = formData.get('memoImage');
+
+        createMemoCard(content, date, image);
+        addMemoForm.reset(); // Clear form inputs
     });
-}
-
-function allowDrop(event) {
-    event.preventDefault();
-}
-
-function drop(event) {
-    event.preventDefault();
-    const data = event.dataTransfer.getData('text/plain');
-    const memo = JSON.parse(data);
-
-    // Implement logic to update the memo position in the backend
-}
+});
