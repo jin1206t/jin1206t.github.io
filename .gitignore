@@ -10,3 +10,4 @@ venv/
 # Ignore theme-related files
 _layouts/
 _config.yml
+assets/
