@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memo App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="memo-container" class="drop-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <!-- Display existing memos as cards here -->
+    </div>
+    <form id="add-memo-form">
+        <!-- Form inputs for adding new memo, including text and optional image upload -->
+        <textarea id="memo-text" placeholder="Enter your memo"></textarea>
+        <input type="file" id="memo-image" accept="image/*">
+        <button type="button" onclick="addMemo()">Add Memo</button>
+    </form>
+    <script src="script.js"></script>
+</body>
+</html>
