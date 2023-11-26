@@ -1,2 +1,4 @@
+theme: jekyll-theme-minimal
+
 exclude:
   - my_flask_app
