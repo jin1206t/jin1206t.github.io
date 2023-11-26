@@ -1,6 +1,9 @@
 # Ignore virtual environments
 venv/
 
+# Ignore other folders
+myblog/
+
 # Ignore compiled Python files
 *.pyc
 
