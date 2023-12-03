@@ -1,17 +1,28 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+    background-image: url('https://1drv.ms/i/s!AkFqMOx-lxBDg7pVj0rNeN-D27hFoA?e=26Xtuw'); /* Replace with your background photo URL */
+    background-size: cover;
+    color: #fff; /* Set text color to be readable on the background */
 }
 
-#memo-container {
-    display: flex;
-    flex-wrap: wrap;
+#messages-container, #notes-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background for readability */
+    border-radius: 10px;
+    margin-top: 20px;
 }
 
-.memo-card {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin: 10px;
-    min-width: 200px;
-    cursor: move;
+textarea {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+button {
+    background-color: #4CAF50; /* Green color for buttons */
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }

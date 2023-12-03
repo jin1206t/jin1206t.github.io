@@ -1,21 +1,34 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memo App</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Jin's big Site</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div id="memo-container" class="drop-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <!-- Display existing memos as cards here -->
+
+    {% include 'messages.html' %}
+
+    <!-- Notes Section -->
+    <div id="notes-container">
+        <h2>Some of My Notes</h2>
+        <ul>
+            {% for note in notes %}
+                <li>{{ note['text'] }}</li>
+            {% endfor %}
+        </ul>
     </div>
-    <form id="add-memo-form">
-        <!-- Form inputs for adding new memo, including text and optional image upload -->
-        <textarea id="memo-text" placeholder="Enter your memo"></textarea>
-        <input type="file" id="memo-image" accept="image/*">
-        <button type="button" onclick="addMemo()">Add Memo</button>
-    </form>
-    <script src="script.js"></script>
+
+    <!-- Add Note Form (for your use only) -->
+    {% if is_authenticated %}
+        <form id="add-note-form" action="{{ url_for('add_note') }}" method="post">
+            <textarea name="note_text" placeholder="Add a note"></textarea>
+            <button type="submit">Add Note</button>
+        </form>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
