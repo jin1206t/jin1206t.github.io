@@ -1,9 +1,10 @@
 // src/App.js
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Introduction from './components/Introduction';
 import Notes from './components/Notes';
 import AddNoteForm from './components/AddNoteForm';
+import MessageContent from './components/MessageContent'; // Import the Message component
 
 const App = () => {
   const [notes, setNotes] = useState([]);
@@ -13,8 +14,7 @@ const App = () => {
     axios.get('http://localhost:5000/api/notes')
       .then((response) => setNotes(response.data))
       .catch((error) => console.error('Error fetching notes:', error));
-  }, []);  // Empty dependency array means this effect runs once when the component mounts
-
+  }, []); // Empty dependency array means this effect runs once when the component mounts
 
   const handleAddNote = (content) => {
     // Add a new note to the backend and update the state
@@ -30,12 +30,21 @@ const App = () => {
       .catch((error) => console.error('Error deleting note:', error));
   };
 
-
   return (
     <div>
-      <Introduction />
-      <Notes notes={notes} onDelete={handleDeleteNote} />
-      <AddNoteForm onAdd={handleAddNote} />
+      {/* Reuse the components */}
+      <MessageContent />
+
+      {/* Your other component JSX */}
+      {notes.map((note) => (
+        <div key={note.id}>{note.content}</div>
+      ))}
+
+      <div>
+        {/* <Introduction /> */}
+        <Notes notes={notes} onDelete={handleDeleteNote} />
+        {/* <AddNoteForm onAdd={handleAddNote} /> */}
+      </div>
     </div>
   );
 };

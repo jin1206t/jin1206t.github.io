@@ -31,5 +31,10 @@ def delete_note(note_id):
     notes = [note for note in notes if note['id'] != note_id]
     return jsonify({'message': 'Note deleted'})
 
+# Route for the root URL
+@app.route('/')
+def index():
+    return 'Welcome to my Flask app!'
+
 if __name__ == '__main__':
     app.run(debug=True)

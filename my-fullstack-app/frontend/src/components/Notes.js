@@ -4,7 +4,7 @@ import React from 'react';
 const Notes = ({ notes, onDelete }) => {
   return (
     <div>
-      <h2>My Notes</h2>
+      <h2>My Free Notes</h2>
       {notes.map((note) => (
         <div key={note.id}>
           <p>{note.content}</p>
