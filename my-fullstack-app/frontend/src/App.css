@@ -36,3 +36,10 @@
     transform: rotate(360deg);
   }
 }
+
+/* src/App.css */
+body {
+  background-color: #f0f0f0; /* Set the background color */
+  font-family: 'Arial', sans-serif; /* Set the font family */
+  /* Add more global styles */
+}

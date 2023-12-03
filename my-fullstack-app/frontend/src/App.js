@@ -1,10 +1,12 @@
 // src/App.js
-import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import Introduction from './components/Introduction';
+import './App.css'; // Import the global CSS file
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import axios from 'axios';
+import MessageContent from './components/MessageContent';
 import Notes from './components/Notes';
 import AddNoteForm from './components/AddNoteForm';
-import MessageContent from './components/MessageContent'; // Import the Message component
 
 const App = () => {
   const [notes, setNotes] = useState([]);
@@ -14,7 +16,7 @@ const App = () => {
     axios.get('http://localhost:5000/api/notes')
       .then((response) => setNotes(response.data))
       .catch((error) => console.error('Error fetching notes:', error));
-  }, []); // Empty dependency array means this effect runs once when the component mounts
+  }, []);
 
   const handleAddNote = (content) => {
     // Add a new note to the backend and update the state
@@ -31,21 +33,20 @@ const App = () => {
   };
 
   return (
-    <div>
-      {/* Reuse the components */}
-      <MessageContent />
+    <DndProvider backend={HTML5Backend}>
+      <div style={{ display: 'flex' }}>
+        <div style={{ flex: 1 }}>
+          {/* Left side content */}
+          <MessageContent />
+        </div>
 
-      {/* Your other component JSX */}
-      {notes.map((note) => (
-        <div key={note.id}>{note.content}</div>
-      ))}
-
-      <div>
-        {/* <Introduction /> */}
-        <Notes notes={notes} onDelete={handleDeleteNote} />
-        {/* <AddNoteForm onAdd={handleAddNote} /> */}
+        <div style={{ flex: 1, marginLeft: '20px' }}>
+          {/* Right side content (Notes) */}
+          <Notes notes={notes} onDelete={handleDeleteNote} />
+          <AddNoteForm onAdd={handleAddNote} />
+        </div>
       </div>
-    </div>
+    </DndProvider>
   );
 };
 

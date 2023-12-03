@@ -6,8 +6,8 @@ CORS(app)
 
 # Sample initial data for notes
 notes = [
-    {'id': 1, 'content': 'Note 1'},
-    {'id': 2, 'content': 'Note 2'},
+    {'id': 1, 'content': 'This is sample - Note 1'},
+    {'id': 2, 'content': 'This is sample - Note 2'},
     # Add more notes as needed
 ]
 
