@@ -25,18 +25,21 @@ body {
 }
 
 #add-note-btn {
+    font-family: 'Papyrus', Fantasy;
+    background-color: #cdcfcf; /* Light blue background color */
     position: fixed;
     top: 10px;
     left: 10px;
     z-index: 2;
-    font-family: 'Papyrus', Fantasy;
-    background-color: #cdcfcf; /* Light blue background color */
 }
 
 .note {
+    font-family: 'Papyrus', Fantasy;
+    font-weight: bold; /* Make the font bold */
+    font-size: 16px; /* Adjust the font size as needed */
     position: absolute;
-    border: 2px solid #333333;
-    padding: 10px;
+    border: 2px solid #faf8f8;
+    padding: 30px;
     background-color: #ffffff;
     cursor: grab;
     border-radius: 30px; /* Add rounded corners for bubble effect */
