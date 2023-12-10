@@ -1,34 +1,24 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Jin's big Site</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-    {% include 'messages.html' %}
+    <!-- self-introduction -->
+    {% include "messages.html" %}
 
-    <!-- Notes Section -->
-    <div id="notes-container">
-        <h2>Some of My Notes</h2>
-        <ul>
-            {% for note in notes %}
-                <li>{{ note['text'] }}</li>
-            {% endfor %}
-        </ul>
-    </div>
+    <!-- Dynamic Notes Section -->
+    <section class="notes" id="notes-container">
+        <!-- Notes will be dynamically added here -->
+    </section>
 
-    <!-- Add Note Form (for your use only) -->
-    {% if is_authenticated %}
-        <form id="add-note-form" action="{{ url_for('add_note') }}" method="post">
-            <textarea name="note_text" placeholder="Add a note"></textarea>
-            <button type="submit">Add Note</button>
-        </form>
-    {% endif %}
+    <button id="add-note-btn">Add New Note</button>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+
 </body>
 </html>
