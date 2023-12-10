@@ -37,12 +37,18 @@ body {
     font-family: 'Papyrus', Fantasy;
     font-weight: bold; /* Make the font bold */
     font-size: 16px; /* Adjust the font size as needed */
+
     position: absolute;
     border: 2px solid #faf8f8;
     padding: 30px;
     background-color: #ffffff;
     cursor: grab;
     border-radius: 30px; /* Add rounded corners for bubble effect */
+
+    display: inline-block;
+    max-width: 250px; /* Set a maximum width to control the width of the bubble */
+    word-wrap: break-word; /* Allow long words to break and wrap to the next line */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8); /* Add a subtle box shadow for depth */
 }
 
 img {
