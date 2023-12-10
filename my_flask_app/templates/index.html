@@ -8,16 +8,22 @@
 </head>
 <body>
 
-    <!-- self-introduction -->
-    {% include "messages.html" %}
 
-    <!-- Dynamic Notes Section -->
-    <section class="notes" id="notes-container">
-        <!-- Notes will be dynamically added here -->
-    </section>
+    <div class="container">
 
-    <button id="add-note-btn">Add New Note</button>
+        <!-- Dynamic Notes Section -->
+        <div class="left-side" id="notes-container">
+            <!-- Notes will be dynamically added here -->
+        </div>
+    
+        <!-- self-introduction -->
+        <div class="right-side">
+            {% include "messages.html" %}
+        </div>
+    </div>
 
+
+    <button id="add-note-btn">Add Message Here!</button>
     <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 
 </body>

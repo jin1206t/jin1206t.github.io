@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     addNoteButton.addEventListener('click', function () {
         const newNote = document.createElement('div');
         newNote.classList.add('note');
-        newNote.textContent = 'New Note';
+        newNote.textContent = 'Like it!'; //Default text
 
         // Add the note to the container
         notesContainer.appendChild(newNote);
@@ -35,8 +35,24 @@ document.addEventListener('DOMContentLoaded', function () {
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-            element.style.top = (element.offsetTop - pos2) + "px";
-            element.style.left = (element.offsetLeft - pos1) + "px";
+            
+            // Adjust position within the left-side container
+            const containerRect = notesContainer.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+
+            const minX = 0;
+            const minY = 0;
+            const maxX = containerRect.width - elementRect.width;
+            const maxY = containerRect.height - elementRect.height;
+
+            let newX = element.offsetLeft - pos1;
+            let newY = element.offsetTop - pos2;
+
+            newX = Math.max(minX, Math.min(newX, maxX));
+            newY = Math.max(minY, Math.min(newY, maxY));
+
+            element.style.top = newY + "px";
+            element.style.left = newX + "px";
         }
 
         function closeDragElement() {

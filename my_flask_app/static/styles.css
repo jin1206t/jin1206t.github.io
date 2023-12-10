@@ -3,12 +3,29 @@ body {
     margin: 20px;
 }
 
+.container {
+    display: flex;
+}
+
+.left-side {
+    width: 50%;
+    padding: 20px;
+    position: relative; /* Needed for absolute positioning of notes */
+}
+
+.right-side {
+    width: 50%;
+    padding: 20px;
+    background-color:#f0f0f0;
+}
+
 .note {
     position: absolute;
     border: 2px solid #333;
     padding: 10px;
     background-color: #fff;
     cursor: grab;
+    border-radius: 20px; /* Add rounded corners for bubble effect */
 }
 
 img {
