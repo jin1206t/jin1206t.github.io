@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     addNoteButton.addEventListener('click', function () {
         const newNote = document.createElement('div');
         newNote.classList.add('note');
-        newNote.textContent = 'Like it!'; //Default text
+        newNote.textContent = 'Like it'; // Default text
 
         // Add the note to the container
         notesContainer.appendChild(newNote);
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-            
+
             // Adjust position within the left-side container
             const containerRect = notesContainer.getBoundingClientRect();
             const elementRect = element.getBoundingClientRect();
@@ -75,38 +75,45 @@ document.addEventListener('DOMContentLoaded', function () {
         const initialX = Math.random() * maxX;
         const initialY = Math.random() * maxY;
 
-        element.style.transition = 'transform 0s'; // Disable transition for initial position
+        element.style.transition = 'transform 0s';
         element.style.transform = `translate(${initialX}px, ${initialY}px)`;
     }
-
 
     function floatNote(element) {
         const containerRect = notesContainer.getBoundingClientRect();
         const elementRect = element.getBoundingClientRect();
 
-        const maxX = containerRect.width - elementRect.width;
+        const maxX = containerRect.width / 2 - elementRect.width; // Set the boundary to the left half of the container
         const maxY = containerRect.height - elementRect.height;
 
-        const animationSpeed = 2; // Adjust the speed as needed
+        const animationSpeed = 2;
+
+        let deltaX = 1; // Initial direction along X-axis
+        let deltaY = Math.random() > 0.5 ? 1 : -1; // Initial random direction along Y-axis
 
         function animate() {
-            let newX = Math.random() * maxX;
-            let newY = Math.random() * maxY;
+            let currentX = parseFloat(element.style.left);
+            let currentY = parseFloat(element.style.top);
+
+            let newX = currentX + deltaX * animationSpeed;
+            let newY = currentY + deltaY * animationSpeed;
+
+            // Loop back to the other side when reaching the left edge
+            newX = newX < 0 ? containerRect.width / 2 : newX;
+
+            // Update position
+            newY = Math.max(0, Math.min(newY, maxY));
 
             element.style.transition = `transform ${animationSpeed}s ease-in-out`;
             element.style.transform = `translate(${newX}px, ${newY}px)`;
 
-            setTimeout(() => {
-                // Reset the position after the animation
-                element.style.transition = 'none';
-                element.style.transform = 'none';
-
-                // Repeat the animation after a delay
-                setTimeout(animate, 1000);
-            }, animationSpeed * 1000);
+            // Repeat the animation
+            requestAnimationFrame(animate);
         }
 
-        // Start the initial animation after a short delay to allow setting the initial position
-        setTimeout(animate, 100);
+        // Set initial position and start the animation
+        setInitialPosition(element);
+        animate();
     }
+    
 });
