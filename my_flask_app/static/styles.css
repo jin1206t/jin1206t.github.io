@@ -29,6 +29,8 @@ body {
     top: 10px;
     left: 10px;
     z-index: 2;
+    font-family: 'Papyrus', Fantasy;
+    background-color: #cdcfcf; /* Light blue background color */
 }
 
 .note {
