@@ -128,12 +128,12 @@ section.main p {
 }
 
 .line-3 {
-    animation: typewriter 4s steps(44) 9s 1 normal both, blinkTextCursor 500ms steps(44) forwards;
+    animation: typewriter 4s steps(44) 10s 1 normal both, blinkTextCursor 500ms steps(44) forwards;
 }
 
-.line-4 {
-    animation: typewriter 4s steps(44) 13s 1 normal both, blinkTextCursor 500ms steps(44) forwards;
-}
+/* .line-4 {
+    animation: typewriter 4s steps(44) 11s 1 normal both, blinkTextCursor 500ms steps(44) forwards;
+} */
 
 
 section.main ul {
@@ -170,7 +170,7 @@ section.main ul li a:hover {
 
 @keyframes blinkTextCursor {
     from {
-        border-right-color: rgba(255, 255, 255, .75);
+        border-right-color: transparent;
     }
     to {
         border-right-color: transparent;
