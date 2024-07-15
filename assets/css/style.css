@@ -128,7 +128,7 @@ section.main p {
 }
 
 .line-3 {
-    animation: typewriter 4s steps(44) 9s 1 normal both, blinkTextCursor 500ms steps(44) forwards;
+    animation: typewriter 4s steps(44) 8s 1 normal both, blinkTextCursor 500ms steps(44) forwards;
 }
 
 /* .line-4 {
