@@ -159,6 +159,13 @@ section.main ul li a:hover {
     color: #fff;
 }
 
+.notion-floating-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
 @keyframes typewriter {
     from {
         width: 0;
