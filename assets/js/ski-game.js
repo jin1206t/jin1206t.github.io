@@ -12,7 +12,7 @@
 
     const GROUND = H - 56;
     const TIER = 58;                 // vertical distance between layers
-    const GRAVITY = 1900, JUMP_V = 700;
+    const GRAVITY = 1900, JUMP_V = 560, BOOST_JUMP_V = 800;
     const GRID = 32;
 
     const sprite = new Image();
@@ -21,7 +21,7 @@
     const keys = { left: false, right: false };
     let mode = 'idle';               // idle | run | over
     let open = false, raf = 0, last = 0;
-    let p, items, cam, camSpeed, coins, nextX, best = 0, dropT = 0;
+    let p, items, cam, camSpeed, stars, boost, hearts, floaters, nextX, sinceUpper, best = 0, dropT = 0;
     let wander = { target: W / 2, timer: 0 };
 
     const sx = it => it.x - cam;
@@ -32,7 +32,7 @@
         const n = Math.max(2, Math.round(w / BLK));
         const blocks = [];
         for (let i = 0; i < n; i++) {
-            blocks.push({ kind: Math.random() < (tier === 2 ? 0.3 : 0.18) ? 'q' : 'brick', bump: 0 });
+            blocks.push({ kind: Math.random() < (tier === 2 ? 0.09 : 0.05) ? 'q' : 'brick', bump: 0 });
         }
         return { t: 'plat', x, w: n * BLK, tier, blocks };
     }
@@ -47,24 +47,34 @@
         items = [];
         cam = 0;
         camSpeed = 30;
-        coins = 0;
-        nextX = W + 120;
+        stars = 0;
+        boost = 0;
+        hearts = 5;
+        floaters = [];
+        nextX = W + 20;
+        sinceUpper = 0;
         dropT = 0;
+    }
+
+    function food(x, y) {
+        const fish = Math.random() < 0.25;
+        return { t: 'coin', x, y, icon: fish ? '🐟' : '⭐', fish };
     }
 
     function generate() {
         while (nextX < cam + W + 240) {
-            const r = Math.random();
+            const r = sinceUpper >= 2 ? 0.6 : Math.random();
             let adv = 0;
-            if (r < 0.28) {
+            if (r >= 0.5 && r < 0.82) sinceUpper = 0; else sinceUpper++;
+            if (r < 0.2) {
                 items.push({ t: 'tree', x: nextX, base: GROUND, h: 38 + Math.random() * 18 });
                 adv = 30;
             } else if (r < 0.5) {
                 const w = 70 + Math.random() * 40;
                 items.push({ t: 'gap', x: nextX, w });
-                if (Math.random() < 0.6) {
+                if (Math.random() < 0.4) {
                     items.push(mkPlat(nextX - 30, w + 60, 1));
-                    items.push({ t: 'coin', x: nextX + w / 2, y: platTop(1) - 24 });
+                    items.push(food(nextX + w / 2, platTop(1) - 24));
                 }
                 adv = w;
             } else if (r < 0.82) {
@@ -80,12 +90,14 @@
                     items.push({ t: 'tree', x: plat.x + bi * BLK + 1, base: platTop(tier), h: 32 + Math.random() * 8, plat, bi });
                 }
                 for (let i = 0; i < 3; i++) {
-                    items.push({ t: 'coin', x: nextX + 20 + i * (w - 40) / 2, y: platTop(tier) - 26 });
+                    if (Math.random() < 0.6) items.push(food(nextX + 20 + i * (w - 40) / 2, platTop(tier) - 26));
                 }
                 adv = w;
             } else {
-                for (let i = 0; i < 4; i++) {
-                    items.push({ t: 'coin', x: nextX + i * 26, y: GROUND - 34 - Math.sin(i / 3 * Math.PI) * 40 });
+                if (Math.random() < 0.75) {
+                    for (let i = 0; i < 3; i++) {
+                        items.push(food(nextX + i * 26, GROUND - 34 - Math.sin(i / 2 * Math.PI) * 36));
+                    }
                 }
                 adv = 100;
             }
@@ -97,7 +109,7 @@
         if (mode === 'idle' && open) return;
         if (mode !== 'run') return;
         if (p.jumps < 2) {
-            p.vy = JUMP_V;
+            p.vy = boost > 0 ? BOOST_JUMP_V : JUMP_V;
             p.jumps++;
         }
     }
@@ -150,13 +162,15 @@
     }
 
     function updateRun(dt) {
-        camSpeed = Math.min(230, camSpeed + dt * 7);
-        cam += camSpeed * dt;
+        camSpeed = Math.min(180, camSpeed + dt * 22);
+        const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+        // holding right speeds the world up a little; moving left never slows the forced scroll
+        boost = Math.max(0, boost - dt);
+        cam += camSpeed * (dir > 0 ? 1.4 : 1) * (boost > 0 ? 1.25 : 1) * dt;
         generate();
         const prevPY = p.y;
 
-        const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-        p.x = Math.max(20, Math.min(W - 20, p.x + dir * 190 * dt));
+        p.x = Math.max(20, Math.min(W - 20, p.x + dir * (boost > 0 ? 250 : 190) * dt));
         physics(dt);
 
         if (p.y > H + 40) return die();
@@ -170,8 +184,16 @@
                 if (p.vy > 0 && prevHead >= bottom && head < bottom) {
                     const b = blockAt(it, p.x + cam);
                     if (b && b.kind !== 'gone' && b.kind !== 'used') {
-                        if (b.kind === 'q') { b.kind = 'used'; coins += 3; }
-                        else { b.kind = 'gone'; coins += 1; }
+                        if (b.kind === 'q') {
+                            b.kind = 'used';
+                            boost = 5;
+                            floaters.push({ x: it.x + (Math.floor((p.x + cam - it.x) / BLK) + 0.5) * BLK, y: platTop(it.tier) - 6, icon: '🎿', life: 1 });
+                        } else {
+                            b.kind = 'gone';
+                            hearts--;
+                            if (hearts <= 0) return die();
+                            floaters.push({ x: it.x + (Math.floor((p.x + cam - it.x) / BLK) + 0.5) * BLK, y: platTop(it.tier) - 6, icon: '💔', life: 1 });
+                        }
                         b.bump = 0.15;
                         p.vy = 0;
                     }
@@ -185,10 +207,12 @@
             } else if (it.t === 'coin' && !it.got) {
                 if (Math.abs(x - p.x) < 20 && it.y > head - 8 && it.y < p.y + 6) {
                     it.got = true;
-                    coins++;
+                    if (it.fish) hearts++; else stars++;
                 }
             }
         }
+        for (const f of floaters) { f.y -= 40 * dt; f.life -= dt * 1.2; }
+        floaters = floaters.filter(f => f.life > 0);
         items = items.filter(it => sx(it) + (it.w || 30) > -60);
         updateScore();
     }
@@ -202,7 +226,7 @@
     }
 
     function updateScore() {
-        scoreEl.textContent = Math.floor(cam / 10) + ' m · ' + coins + ' ★' + (best ? ' · best ' + best + ' m' : '');
+        scoreEl.textContent = Math.floor(cam / 10) + ' m · ❤️ ' + hearts + ' · ⭐ ' + stars + (boost > 0 ? ' · 🎿 ' + Math.ceil(boost) + 's' : '') + (best ? ' · best ' + best + ' m' : '');
     }
 
     function rr(x, y, w, h, r, fill) {
@@ -243,9 +267,14 @@
         // ground as rounded bars between gaps
         const gaps = items.filter(it => it.t === 'gap').map(it => [sx(it), sx(it) + it.w]).sort((a, b) => a[0] - b[0]);
         let x = -20;
-        const seg = (a, b) => { if (b > a) rr(a, GROUND, b - a, 14, 7, '#c8d0f0'); };
+        const seg = (a, b) => { if (b > a) rr(a, GROUND, b - a, H - GROUND + 8, 8, '#f4f8ff'); };
         for (const [a, b] of gaps) { seg(x, Math.min(a, W + 20)); x = Math.max(x, b); }
         seg(x, W + 20);
+        // gaps stay open to the grid; only a faint shadow hints at the drop
+        for (const [a, b] of gaps) {
+            ctx.fillStyle = 'rgba(0,0,0,.35)';
+            ctx.fillRect(a, GROUND, b - a, H - GROUND);
+        }
 
         for (const it of items) {
             const px = sx(it);
@@ -269,12 +298,18 @@
             const px = sx(it);
             if (it.t === 'tree') { if (!it.fall) drawTree(px, it.base, it.h); }
             else if (it.t === 'coin' && !it.got) {
-                ctx.fillStyle = '#ffcb3d';
-                ctx.beginPath();
-                ctx.arc(px, it.y, 7, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.font = '18px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(it.icon, px, it.y + 6);
             }
         }
+        for (const f of floaters) {
+            ctx.globalAlpha = Math.max(0, f.life);
+            ctx.font = '18px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(f.icon, sx(f), f.y);
+        }
+        ctx.globalAlpha = 1;
 
         if (sprite.complete && sprite.naturalWidth) {
             ctx.drawImage(sprite, p.x - p.size / 2, p.y - p.size, p.size, p.size);
@@ -317,6 +352,7 @@
         reset();
         p.x = x;
         mode = 'run';
+        camSpeed = 35;
         btn.textContent = 'Stop';
         btn.setAttribute('aria-pressed', 'true');
     }
