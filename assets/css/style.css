@@ -215,6 +215,16 @@ section.main img#hero-avatar:hover {
     transform: scale(1.05);
 }
 
+/* subtle easter-egg cue: a soft ring pulses around the avatar now and then */
+section.main img#hero-avatar {
+    animation: avatarPulse 5s ease-in-out 12s infinite;
+}
+
+@keyframes avatarPulse {
+    0%, 80%, 100% { box-shadow: 0 0 0 0 rgba(139, 124, 246, 0); }
+    90% { box-shadow: 0 0 0 10px rgba(139, 124, 246, .25); }
+}
+
 .ski-modal {
     position: fixed;
     inset: 0;
@@ -286,6 +296,16 @@ section.ski-game {
 .ski-text span {
     color: #94a1b2;
     font-size: 12px;
+}
+
+.ski-keys {
+    color: #6b6f85;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .ski-keys { display: none; }
 }
 
 #ski-toggle {
