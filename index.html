@@ -38,7 +38,7 @@
     </header>
 
     <section class="main">
-        <img src="assets/imgs/Cat_hide.gif" alt="" srcset="">
+        <img id="hero-avatar" src="assets/imgs/Cat_hide.gif" alt="Play a game" title="Click me!">
         <span>Hello I'm Jin</span>
         <p class="line-1">This is my playground.</p>
         <p class="line-2">Please bear with me for updates.</p>
@@ -52,5 +52,21 @@
         </ul>
     </section>
 
+    <div class="ski-modal" id="ski-modal" role="dialog" aria-modal="true" aria-label="Ski runner game">
+        <section class="ski-game">
+            <div class="ski-bar">
+                <img src="assets/imgs/Cat_hide.gif" alt="Jin" class="ski-avatar">
+                <div class="ski-text">
+                    <strong>Play Jin while you wait</strong>
+                    <span id="ski-score">0 m</span>
+                </div>
+                <button id="ski-toggle" type="button" aria-pressed="false">Play</button>
+                <button id="ski-close" type="button" aria-label="Close">&times;</button>
+            </div>
+            <canvas id="ski-canvas" width="640" height="240" aria-label="Side-scrolling ski game"></canvas>
+        </section>
+    </div>
+
+    <script src="assets/js/ski-game.js"></script>
 </body>
 </html>

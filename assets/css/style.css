@@ -205,6 +205,111 @@ section.main ul li a:hover {
     }
 }
 
+/* Ski mini game */
+
+section.main img#hero-avatar {
+    transition: transform 0.2s;
+}
+
+section.main img#hero-avatar:hover {
+    transform: scale(1.05);
+}
+
+.ski-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 14, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+.ski-modal.open {
+    display: flex;
+    animation: popIn .25s ease-out;
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(.92); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+section.ski-game {
+    position: relative;
+    max-width: 640px;
+    width: calc(100% - 32px);
+    border: 1px solid #2a2b36;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #21222b;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+}
+
+#ski-close {
+    background: none;
+    border: 0;
+    color: #a6a8b8;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+#ski-close:hover {
+    color: #fff;
+}
+
+.ski-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+}
+
+.ski-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 100%;
+    object-fit: cover;
+    border: 2px solid #3b3d4e;
+}
+
+.ski-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    font-size: 14px;
+}
+
+.ski-text span {
+    color: #94a1b2;
+    font-size: 12px;
+}
+
+#ski-toggle {
+    background: #fff;
+    color: #16161a;
+    border: 0;
+    border-radius: 999px;
+    padding: 7px 20px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#ski-toggle:hover {
+    background: #d6dbe6;
+}
+
+#ski-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+}
+
 /* Trophies Section */
 
 .trophies-section {
