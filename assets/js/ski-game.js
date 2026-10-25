@@ -8,7 +8,8 @@
     const scoreEl = document.getElementById('ski-score');
     const hero = document.getElementById('hero-avatar');
     const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
+    let W = canvas.width;
+    const H = canvas.height;
 
     const GROUND = H - 56;
     const TIER = 58;                 // vertical distance between layers
@@ -31,9 +32,9 @@
     function mkPlat(x, w, tier) {
         const n = Math.max(2, Math.round(w / BLK));
         const blocks = [];
-        for (let i = 0; i < n; i++) {
-            blocks.push({ kind: Math.random() < (tier === 2 ? 0.09 : 0.05) ? 'q' : 'brick', bump: 0 });
-        }
+        for (let i = 0; i < n; i++) blocks.push({ kind: 'brick', bump: 0 });
+        // power-up blocks are rare: at most one per platform
+        if (Math.random() < (tier === 2 ? 0.35 : 0.2)) blocks[Math.floor(Math.random() * n)].kind = 'q';
         return { t: 'plat', x, w: n * BLK, tier, blocks };
     }
 
@@ -56,50 +57,54 @@
         dropT = 0;
     }
 
-    function food(x, y) {
-        const fish = Math.random() < 0.25;
-        return { t: 'coin', x, y, icon: fish ? '🐟' : '⭐', fish };
+    function star(x, y) { return { t: 'coin', x, y, icon: '⭐', fish: false }; }
+    function fish(x, y) { return { t: 'coin', x, y, icon: '🐟', fish: true }; }
+
+    // stars along an arch, easy to sweep up in one jump
+    function arch(x0, baseY, n, height) {
+        for (let i = 0; i < n; i++) {
+            const k = n === 1 ? 0.5 : i / (n - 1);
+            items.push(star(x0 + i * 24, baseY - Math.sin(k * Math.PI) * height));
+        }
+    }
+
+    function treeWithFish(x, base, h, plat, bi) {
+        items.push({ t: 'tree', x, base, h, plat, bi });
+        // fish sits above the tree top, reachable with a jump
+        if (Math.random() < 0.5) items.push(fish(x + 11, base - h - 22));
     }
 
     function generate() {
         while (nextX < cam + W + 240) {
             const r = sinceUpper >= 2 ? 0.6 : Math.random();
             let adv = 0;
-            if (r >= 0.5 && r < 0.82) sinceUpper = 0; else sinceUpper++;
-            if (r < 0.2) {
-                items.push({ t: 'tree', x: nextX, base: GROUND, h: 38 + Math.random() * 18 });
+            if (r >= 0.45 && r < 0.78) sinceUpper = 0; else sinceUpper++;
+            if (r < 0.22) {
+                treeWithFish(nextX, GROUND, 38 + Math.random() * 16);
                 adv = 30;
-            } else if (r < 0.5) {
+            } else if (r < 0.45) {
                 const w = 70 + Math.random() * 40;
                 items.push({ t: 'gap', x: nextX, w });
-                if (Math.random() < 0.4) {
-                    items.push(mkPlat(nextX - 30, w + 60, 1));
-                    items.push(food(nextX + w / 2, platTop(1) - 24));
-                }
+                if (Math.random() < 0.5) arch(nextX - 4, GROUND - 30, Math.round((w + 8) / 24) + 1, 50);
+                if (Math.random() < 0.25) items.push(mkPlat(nextX - 30, w + 60, 1));
                 adv = w;
-            } else if (r < 0.82) {
+            } else if (r < 0.78) {
                 const tier = Math.random() < 0.5 ? 1 : 2;
                 const w = 150 + Math.random() * 80;
-                if (tier === 2) {
-                    items.push(mkPlat(nextX - 70, 90, 1));
-                }
+                if (tier === 2) items.push(mkPlat(nextX - 70, 90, 1));
                 const plat = mkPlat(nextX, w, tier);
                 items.push(plat);
-                if (Math.random() < 0.6) {
+                if (Math.random() < 0.55) {
                     const bi = 1 + Math.floor(Math.random() * (plat.blocks.length - 2));
-                    items.push({ t: 'tree', x: plat.x + bi * BLK + 1, base: platTop(tier), h: 32 + Math.random() * 8, plat, bi });
-                }
-                for (let i = 0; i < 3; i++) {
-                    if (Math.random() < 0.6) items.push(food(nextX + 20 + i * (w - 40) / 2, platTop(tier) - 26));
+                    treeWithFish(plat.x + bi * BLK + 1, platTop(tier), 32 + Math.random() * 8, plat, bi);
+                } else if (Math.random() < 0.7) {
+                    arch(plat.x + 20, platTop(tier) - 26, 5, 34);
                 }
                 adv = w;
             } else {
-                if (Math.random() < 0.75) {
-                    for (let i = 0; i < 3; i++) {
-                        items.push(food(nextX + i * 26, GROUND - 34 - Math.sin(i / 2 * Math.PI) * 36));
-                    }
-                }
-                adv = 100;
+                if (Math.random() < 0.85) arch(nextX, GROUND - 28, 6, 56);
+                if (Math.random() < 0.35) items.push(fish(nextX + 140, GROUND - 30));
+                adv = 150;
             }
             nextX += adv + 170 + Math.random() * 120;
         }
@@ -188,6 +193,7 @@
                             b.kind = 'used';
                             boost = 5;
                             floaters.push({ x: it.x + (Math.floor((p.x + cam - it.x) / BLK) + 0.5) * BLK, y: platTop(it.tier) - 6, icon: '🎿', life: 1 });
+                            floaters.push({ screen: true, x: p.x, y: p.y - p.size - 14, text: 'POWER UP! Jump higher · Run faster', life: 1.8 });
                         } else {
                             b.kind = 'gone';
                             hearts--;
@@ -211,7 +217,7 @@
                 }
             }
         }
-        for (const f of floaters) { f.y -= 40 * dt; f.life -= dt * 1.2; }
+        for (const f of floaters) { f.y -= 40 * dt; f.life -= dt * (f.text ? 0.6 : 1.2); }
         floaters = floaters.filter(f => f.life > 0);
         items = items.filter(it => sx(it) + (it.w || 30) > -60);
         updateScore();
@@ -304,10 +310,16 @@
             }
         }
         for (const f of floaters) {
-            ctx.globalAlpha = Math.max(0, f.life);
-            ctx.font = '18px sans-serif';
+            ctx.globalAlpha = Math.max(0, Math.min(1, f.life));
             ctx.textAlign = 'center';
-            ctx.fillText(f.icon, sx(f), f.y);
+            if (f.text) {
+                ctx.font = 'bold 13px Poppins, sans-serif';
+                ctx.fillStyle = '#ffcb3d';
+                ctx.fillText(f.text, Math.max(110, Math.min(W - 110, f.x)), f.y);
+            } else {
+                ctx.font = '18px sans-serif';
+                ctx.fillText(f.icon, sx(f), f.y);
+            }
         }
         ctx.globalAlpha = 1;
 
@@ -357,9 +369,17 @@
         btn.setAttribute('aria-pressed', 'true');
     }
 
+    function fit() {
+        const w = Math.max(320, Math.round(modal.clientWidth || window.innerWidth));
+        if (w === W) return;
+        W = canvas.width = w;
+        if (p) p.x = Math.min(p.x, W - 20);
+    }
+
     function openModal() {
         open = true;
         modal.classList.add('open');
+        fit();
         toIdle();
         last = performance.now();
         cancelAnimationFrame(raf);
@@ -373,6 +393,7 @@
     }
 
     hero.addEventListener('click', openModal);
+    window.addEventListener('resize', () => { if (open) fit(); });
     closeBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
     btn.addEventListener('click', () => (mode === 'run' ? toIdle() : start()));
