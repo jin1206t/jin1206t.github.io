@@ -11,7 +11,7 @@
     let W = canvas.width;
     const H = canvas.height;
 
-    const GROUND = H - 56;
+    const GROUND = H - 30;
     const TIER = 58;                 // vertical distance between layers
     const GRAVITY = 1900, JUMP_V = 560, BOOST_JUMP_V = 800;
     const GRID = 32;
@@ -22,7 +22,7 @@
     const keys = { left: false, right: false };
     let mode = 'idle';               // idle | run | over
     let open = false, raf = 0, last = 0;
-    let p, items, cam, camSpeed, stars, boost, hearts, floaters, nextX, sinceUpper, best = 0, dropT = 0;
+    let p, items, cam, camSpeed, stars, boost, magnet, hearts, floaters, nextX, sinceUpper, best = 0, dropT = 0, nextBoost = Math.random() < 0.5;
     let wander = { target: W / 2, timer: 0 };
 
     const sx = it => it.x - cam;
@@ -50,6 +50,7 @@
         camSpeed = 30;
         stars = 0;
         boost = 0;
+        magnet = 0;
         hearts = 5;
         floaters = [];
         nextX = W + 20;
@@ -68,14 +69,60 @@
         }
     }
 
+    // mostly one or two lone stars; a full arch only now and then
+    function starsAt(x0, baseY, n, height, span) {
+        if (Math.random() < 0.05) return arch(x0, baseY, n, height);
+        const cnt = Math.random() < 0.5 ? 1 : 2;
+        for (let i = 0; i < cnt; i++) {
+            items.push(star(x0 + span * (0.3 + 0.4 * Math.random()) + i * 40, baseY - height * (0.4 + 0.6 * Math.random())));
+        }
+    }
+
+    // keep spawned things out of awkward spots: no pickups under or inside platforms,
+    // no ground trees right next to gaps or under platforms (fish above a tree is the exception)
+    function tidy(from) {
+        const fresh = items.slice(from);
+        const plats = items.filter(it => it.t === 'plat');
+        const gaps = items.filter(it => it.t === 'gap');
+        const trees = items.filter(it => it.t === 'tree');
+        const drop = new Set();
+        for (const it of fresh) {
+            if (it.t === 'coin' && !it.keep) {
+                for (const pl of plats) {
+                    const top = platTop(pl.tier);
+                    if (it.x > pl.x - 14 && it.x < pl.x + pl.w + 14 && it.y > top - 14) drop.add(it);
+                }
+                for (const tr of trees) {
+                    if (it.x > tr.x - 14 && it.x < tr.x + 36 && it.y > tr.base - tr.h - 12) drop.add(it);
+                }
+            } else if (it.t === 'tree' && !it.plat) {
+                for (const pl of plats) {
+                    if (it.x > pl.x - 50 && it.x < pl.x + pl.w + 50) drop.add(it);
+                }
+                for (const g of gaps) {
+                    if (it.x > g.x - 60 && it.x < g.x + g.w + 40) drop.add(it);
+                }
+            }
+        }
+        items = items.filter(it => !drop.has(it));
+        // fish that belonged to a removed tree go with it
+        items = items.filter(it => !(it.keep && it.owner && drop.has(it.owner)));
+    }
+
     function treeWithFish(x, base, h, plat, bi) {
-        items.push({ t: 'tree', x, base, h, plat, bi });
-        // fish sits above the tree top, reachable with a jump
-        if (Math.random() < 0.5) items.push(fish(x + 11, base - h - 22));
+        const tr = { t: 'tree', x, base, h, plat, bi };
+        items.push(tr);
+        if (Math.random() < 0.5) {
+            const f = fish(x + 11, base - h - 22);
+            f.keep = true;
+            f.owner = tr;
+            items.push(f);
+        }
     }
 
     function generate() {
         while (nextX < cam + W + 240) {
+            const from = items.length;
             const r = sinceUpper >= 2 ? 0.6 : Math.random();
             let adv = 0;
             if (r >= 0.45 && r < 0.78) sinceUpper = 0; else sinceUpper++;
@@ -85,7 +132,7 @@
             } else if (r < 0.45) {
                 const w = 70 + Math.random() * 40;
                 items.push({ t: 'gap', x: nextX, w });
-                if (Math.random() < 0.5) arch(nextX - 4, GROUND - 30, Math.round((w + 8) / 24) + 1, 50);
+                if (Math.random() < 0.6) starsAt(nextX - 4, GROUND - 44, Math.round((w + 8) / 24) + 1, 50, w);
                 if (Math.random() < 0.25) items.push(mkPlat(nextX - 30, w + 60, 1));
                 adv = w;
             } else if (r < 0.78) {
@@ -98,14 +145,15 @@
                     const bi = 1 + Math.floor(Math.random() * (plat.blocks.length - 2));
                     treeWithFish(plat.x + bi * BLK + 1, platTop(tier), 32 + Math.random() * 8, plat, bi);
                 } else if (Math.random() < 0.7) {
-                    arch(plat.x + 20, platTop(tier) - 26, 5, 34);
+                    starsAt(plat.x + 20, platTop(tier) - 26, 5, 34, w - 40);
                 }
                 adv = w;
             } else {
-                if (Math.random() < 0.85) arch(nextX, GROUND - 28, 6, 56);
+                if (Math.random() < 0.85) starsAt(nextX, GROUND - 28, 6, 56, 120);
                 if (Math.random() < 0.35) items.push(fish(nextX + 140, GROUND - 30));
                 adv = 150;
             }
+            tidy(from);
             nextX += adv + 170 + Math.random() * 120;
         }
     }
@@ -117,6 +165,11 @@
             p.vy = boost > 0 ? BOOST_JUMP_V : JUMP_V;
             p.jumps++;
         }
+    }
+
+    // releasing jump early gives a shorter hop
+    function cutJump() {
+        if (mode === 'run' && p.vy > 260) p.vy *= 0.55;
     }
 
     function inGap(x) {
@@ -171,37 +224,66 @@
         const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
         // holding right speeds the world up a little; moving left never slows the forced scroll
         boost = Math.max(0, boost - dt);
-        cam += camSpeed * (dir > 0 ? 1.4 : 1) * (boost > 0 ? 1.25 : 1) * dt;
+        magnet = Math.max(0, magnet - dt);
+        cam += camSpeed * (dir > 0 ? 1.2 : 1) * (boost > 0 ? 1.25 : 1) * dt;
         generate();
         const prevPY = p.y;
 
-        p.x = Math.max(20, Math.min(W - 20, p.x + dir * (boost > 0 ? 250 : 190) * dt));
+        // run speed always beats the scroll speed, so you can still run back for things you missed
+        const runSpeed = (100 + camSpeed * 0.9) * (boost > 0 ? 1.25 : 1);
+        p.x = Math.max(20, Math.min(W - 20, p.x + dir * runSpeed * (dir > 0 ? 0.8 : 1.3) * dt));
         physics(dt);
 
         if (p.y > H + 40) return die();
 
-        const hw = p.size * 0.28, head = p.y - p.size * 0.8;
+        const hw = p.size * 0.28;
+        let head = p.y - p.size * 0.8;
         const prevHead = prevPY - p.size * 0.8;
         for (const it of items) {
             const x = sx(it);
             if (it.t === 'plat') {
-                const bottom = platTop(it.tier) + BLK_H;
-                if (p.vy > 0 && prevHead >= bottom && head < bottom) {
-                    const b = blockAt(it, p.x + cam);
-                    if (b && b.kind !== 'gone' && b.kind !== 'used') {
+                const top = platTop(it.tier), bottom = top + BLK_H;
+                // ceiling: every non-gone block under the head is solid, only the nearest one reacts
+                if (p.vy > 0 && prevHead >= bottom - 1 && head < bottom) {
+                    const solid = [p.x, p.x - hw * 0.6, p.x + hw * 0.6]
+                        .map(wx => blockAt(it, wx + cam))
+                        .filter(b => b && b.kind !== 'gone');
+                    if (solid.length) {
+                        const b = solid[0];
+                        const bi = it.blocks.indexOf(b);
+                        const bx = x + (bi + 0.5) * BLK;
                         if (b.kind === 'q') {
                             b.kind = 'used';
-                            boost = 5;
-                            floaters.push({ x: it.x + (Math.floor((p.x + cam - it.x) / BLK) + 0.5) * BLK, y: platTop(it.tier) - 6, icon: '🎿', life: 1 });
-                            floaters.push({ screen: true, x: p.x, y: p.y - p.size - 14, text: 'POWER UP! Jump higher · Run faster', life: 1.8 });
-                        } else {
+                            nextBoost = !nextBoost;
+                            if (nextBoost) {
+                                boost = 5;
+                                floaters.push({ x: bx + cam, y: top - 6, icon: '🎿', life: 1 });
+                                floaters.push({ x: p.x, y: p.y - p.size - 14, text: 'POWER UP! Jump higher · Run faster', life: 1.8, screen: true });
+                            } else {
+                                magnet = 8;
+                                floaters.push({ x: bx + cam, y: top - 6, icon: '🐝', life: 1 });
+                                floaters.push({ x: p.x, y: p.y - p.size - 14, text: 'MAGNET! Items fly to you', life: 1.8, screen: true });
+                            }
+                            b.bump = 0.15;
+                        } else if (b.kind === 'brick') {
                             b.kind = 'gone';
                             hearts--;
                             if (hearts <= 0) return die();
-                            floaters.push({ x: it.x + (Math.floor((p.x + cam - it.x) / BLK) + 0.5) * BLK, y: platTop(it.tier) - 6, icon: '💔', life: 1 });
+                            floaters.push({ x: bx + cam, y: top - 6, icon: '💔', life: 1 });
+                            b.bump = 0.15;
                         }
-                        b.bump = 0.15;
+                        p.y = bottom + p.size * 0.8;
                         p.vy = 0;
+                        head = bottom;
+                    }
+                }
+                // sides: push the player out of blocks instead of letting him pass through
+                for (let i = 0; i < it.blocks.length; i++) {
+                    if (it.blocks[i].kind === 'gone') continue;
+                    const bx = x + i * BLK;
+                    if (p.x + hw > bx && p.x - hw < bx + BLK && head < bottom - 1 && p.y - 2 > top + 1) {
+                        p.x = p.x < bx + BLK / 2 ? bx - hw : bx + BLK + hw;
+                        p.x = Math.max(20, Math.min(W - 20, p.x));
                     }
                 }
                 it.blocks.forEach(b => { b.bump = Math.max(0, b.bump - dt); });
@@ -211,7 +293,16 @@
             if (it.t === 'tree' && !it.fall) {
                 if (p.x + hw > x + 4 && p.x - hw < x + 22 && p.y > it.base - it.h + 6 && p.y <= it.base + 6) return die();
             } else if (it.t === 'coin' && !it.got) {
-                if (Math.abs(x - p.x) < 20 && it.y > head - 8 && it.y < p.y + 6) {
+                if (magnet > 0) {
+                    const tx = p.x + cam, ty = p.y - p.size * 0.5;
+                    const dx = tx - it.x, dy = ty - it.y, d = Math.hypot(dx, dy);
+                    if (d < 170 && d > 1) {
+                        const s = Math.min(d, 420 * dt);
+                        it.x += dx / d * s;
+                        it.y += dy / d * s;
+                    }
+                }
+                if (Math.abs(sx(it) - p.x) < 20 && it.y > head - 8 && it.y < p.y + 6) {
                     it.got = true;
                     if (it.fish) hearts++; else stars++;
                 }
@@ -232,7 +323,7 @@
     }
 
     function updateScore() {
-        scoreEl.textContent = Math.floor(cam / 10) + ' m · ❤️ ' + hearts + ' · ⭐ ' + stars + (boost > 0 ? ' · 🎿 ' + Math.ceil(boost) + 's' : '') + (best ? ' · best ' + best + ' m' : '');
+        scoreEl.textContent = Math.floor(cam / 10) + ' m · ❤️ ' + hearts + ' · ⭐ ' + stars + (boost > 0 ? ' · 🎿 ' + Math.ceil(boost) + 's' : '') + (magnet > 0 ? ' · 🐝 ' + Math.ceil(magnet) + 's' : '') + (best ? ' · best ' + best + ' m' : '');
     }
 
     function rr(x, y, w, h, r, fill) {
@@ -243,9 +334,9 @@
     }
 
     function drawTree(x, base, h) {
-        ctx.fillStyle = '#6b4a35';
+        ctx.fillStyle = '#7a5a3a';
         ctx.fillRect(x + 9, base - 7, 4, 7);
-        ctx.fillStyle = '#3fb97d';
+        ctx.fillStyle = '#3fae5a';
         const layers = 3, lh = (h - 7) / layers;
         for (let i = 0; i < layers; i++) {
             const w = 12 - i * 2, y = base - 7 - i * lh * 0.72;
@@ -273,14 +364,9 @@
         // ground as rounded bars between gaps
         const gaps = items.filter(it => it.t === 'gap').map(it => [sx(it), sx(it) + it.w]).sort((a, b) => a[0] - b[0]);
         let x = -20;
-        const seg = (a, b) => { if (b > a) rr(a, GROUND, b - a, H - GROUND + 8, 8, '#f4f8ff'); };
+        const seg = (a, b) => { if (b > a) rr(a, GROUND, b - a, H - GROUND + 12, 8, '#f4f8ff'); };
         for (const [a, b] of gaps) { seg(x, Math.min(a, W + 20)); x = Math.max(x, b); }
         seg(x, W + 20);
-        // gaps stay open to the grid; only a faint shadow hints at the drop
-        for (const [a, b] of gaps) {
-            ctx.fillStyle = 'rgba(0,0,0,.35)';
-            ctx.fillRect(a, GROUND, b - a, H - GROUND);
-        }
 
         for (const it of items) {
             const px = sx(it);
@@ -289,7 +375,7 @@
                 it.blocks.forEach((b, i) => {
                     if (b.kind === 'gone') return;
                     const bx = px + i * BLK, by = top - (b.bump > 0 ? 5 : 0);
-                    const fill = b.kind === 'q' ? '#ffcb3d' : b.kind === 'used' ? '#5a5d73' : '#8b7cf6';
+                    const fill = b.kind === 'q' ? '#ffcb3d' : b.kind === 'used' ? '#3a3c4b' : '#6b7088';
                     rr(bx + 1, by, BLK - 2, BLK_H, 4, fill);
                     if (b.kind === 'q') {
                         ctx.fillStyle = '#7a5600';
@@ -328,6 +414,13 @@
         } else {
             ctx.fillStyle = '#e4572e';
             ctx.fillRect(p.x - 14, p.y - 28, 28, 28);
+        }
+
+        if (magnet > 0) {
+            const t = performance.now() / 1000;
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🐝', p.x + Math.cos(t * 5) * 30, p.y - p.size - 4 + Math.sin(t * 7) * 8);
         }
 
         ctx.textAlign = 'center';
@@ -410,6 +503,7 @@
         e.preventDefault();
     });
     window.addEventListener('keyup', e => {
+        if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') cutJump();
         if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
         if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
     });
